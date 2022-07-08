@@ -1,0 +1,3 @@
+export const SAVE_IN_SUCCESS="SAVE_IN_SUCCESS";
+export const SAVE_IN_REQUEST="SAVE_IN_REQUEST";
+export const SAVE_IN_ERROR ="SAVE_IN_ERROR";
