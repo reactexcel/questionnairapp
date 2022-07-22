@@ -6,47 +6,34 @@ import RadioGroup from '@mui/material/RadioGroup';
 import FormControlLabel from '@mui/material/FormControlLabel';
 import FormControl from '@mui/material/FormControl';
 import FormLabel from '@mui/material/FormLabel';
-import Checkbox from '@mui/material/Checkbox';
-import FormGroup from '@mui/material/FormGroup';
 import TextField from '@mui/material/TextField';
-import { useDispatch, useSelector } from "react-redux";
+import { useDispatch, useSelector } from 'react-redux';
 import { SaveInRequest } from '../Redux/action/action';
-
-const questionsDetails = [
-  {
-    id: 1,
-    ques: 'This is my first question?',
-    type: 'radio',
-    options: ['First', 'Second', 'Third', 'Fourth', 'Fifth'],
-  },
-  {
-    id: 2,
-    ques: 'This is my second question?',
-    type: 'radio',
-    options: ['12333', '88888', '9999', '10100101', '0000000'],
-  },
-  {
-    id: 3,
-    ques: 'This is my second question?',
-    type: 'checkbox',
-    options: ['First', 'Second', 'Third', 'Fourth', 'Fifth'],
-  },
-  {
-    id: 4,
-    ques: 'This is my fourth question?',
-    type: 'text',
-    options: null,
-  },
- 
-];
+import Navbar from './navbar';
+import axios from '../Services/index';
+import MenuItem from '@mui/material/MenuItem';
+import Select from '@mui/material/Select';
 
 const useStyles = makeStyles(() => ({
   root: {
-    marginTop: '10%',
+    marginTop: '5%',
+    display: 'flex',
+    margin: 'auto',
+    width: '50%',
+  },
+  thankyou: {
     display: 'flex',
     justifyContent: 'center',
+    marginTop: '20%',
+    color: '#1976d2',
   },
-  answers: {},
+  radiogroups: {
+    display: 'grid !important',
+    '&.css-qfz70r-MuiFormGroup-root': {
+      display: 'grid !important',
+      gridTemplateColumns: '3fr 3fr 3fr 3fr 3fr !important',
+    },
+  },
   nextbtn: {
     display: 'flex',
     justifyContent: 'space-around',
@@ -55,111 +42,192 @@ const useStyles = makeStyles(() => ({
 }));
 const Questions = () => {
   const classes = useStyles();
-  const dispatch = useDispatch()
-  const [selectedValue, setSelectedValue] = useState({
-    id:"",
-    ans:[],
-  });
-  const [globalState, setGlobalState]= useState([])
-  const [selectCheckBox, setSelectCheckBox]= useState([]);
-  const [questionId, setQuestionid] = useState(1);
-  const [textAnswer, setTextAnswer] = useState("")
+  const dispatch = useDispatch();
 
+  const [nexquestionDetails, setNextQuestionDetails] = useState();
+  const [questionId, setQuestionid] = useState(1);
+  const [optionsAns, setOptionsAns] = useState();
+  const [selectedValue, setSelectedValue] = useState([]);
+  const [thankyou, setThankYou] = useState(false);
+  const token =
+    'eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJvcmdhbml6YXRpb25faWQiOjUzMiwicGFydG5lcl9jb2RlIjoiTmV3MDAwMSIsInN0YXRlIjoiQ2hoYXR0aXNnYXJoIiwiZXhwIjoxNjU4NDY5MjEzfQ.bVpA3SUwfWVnUuRFvJv3FtsQH7SaDpI_GJNu4VXhGtk';
+  
   const nextQuestion = () => {
-    if (questionsDetails.length > questionId) {
-      setQuestionid((prev) => prev + 1);
-      dispatch(SaveInRequest({globalState}))
+    getMyNextQuestions();
+  };
+  const storeAnswer = useSelector((state) => state);
+  const prevQuestion = () => {
+    if (questionId > 1) {
+      setQuestionid((prev) => prev - 1);
     }
   };
-  const storeAnswer = useSelector((state)=> state)
-  const prevQuestion= ()=>{
-    if(questionId>1){
-        setQuestionid((prev) => prev - 1)
+  const getMyNextQuestions = async () => {
+    let data;
+    if (selectedValue) {
+      data = {
+        transaction_id: 'ZGVtbzIzc3NoIE5ldzAwMDEgNTMy',
+        restart_eligibility: false,
+        beneficiary_type: 0,
+        answers: selectedValue,
+      };
+    } else {
+      data = {
+        transaction_id: 'ZGVtbzIzc3NoIE5ldzAwMDEgNTMy',
+        restart_eligibility: false,
+        beneficiary_type: 0,
+        answers: [],
+      };
     }
-  }
-const handleSaveAnswer=(e,type,quesID)=>{
-  if(type==='radio'){
-    let prev={
-      ...selectedValue, id:quesID, ans:[e.target.value]
+    try {
+      const resp = await axios.post(`/run_dq`, data, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      if (resp) {
+        if (resp?.data?.status === 1009) {
+          setThankYou(true);
+        }
+        setNextQuestionDetails(resp?.data?.next);
+        let allOptions = [];
+        for (let val in resp.data.next.options) {
+          allOptions.push({
+            [val]: resp.data.next.options[val],
+          });
+        }
+        setOptionsAns(allOptions);
+      }
+    } catch (error) {
+      console.log(error);
     }
-    setSelectedValue(prev)
-    setGlobalState([...globalState, prev])
-  } 
-  // else if (type==="text"){
-  //   let prev={
-  //     ...selectedValue,id:quesID,ans:[e.target.value]
-  //   }
-  //   setSelectedValue(prev)
-  //   setGlobalState([...globalState, prev])
-  // }
-}
+  };
+  useEffect(() => {
+    getMyNextQuestions();
+  }, []);
+  console.log(
+    nexquestionDetails,
+    'nexquestionDetailsnexquestionDetails',
+    selectedValue, optionsAns
+  );
   return (
     <>
-      <div className={classes.root}>
-        <div>
-          {questionsDetails
-            .filter((value) => value.id === questionId)
-            .map((val) => (
+      <Navbar />
+      {thankyou ? (
+        <div className={classes.thankyou}>
+          <h1>Thank you!!</h1>
+        </div>
+      ) : (
+        <>
+          <div className={classes.root}>
+            <div>
               <FormControl>
-                <FormLabel id='demo-radio-buttons-group-label'>
-                  <h3>{val.ques}</h3>
+                <FormLabel id='demo-row-radio-buttons-group-label'>
+                  <h3>{nexquestionDetails?.name}</h3>
                 </FormLabel>
-                {val.type === 'radio' && (
-                  <RadioGroup
-                    aria-labelledby='demo-radio-buttons-group-label'
-                    defaultValue='female'
-                    name='radio-buttons-group'
-                  >
-                    {val?.options?.map((option, ind) => (
-                      <FormControlLabel
-                        value={option}
-                        control={<Radio />}
-                        label={`${option}`}
-                        onChange={(e)=>handleSaveAnswer(e, "radio",val.id)}
-                        // onChange={(e) => setSelectedValue(e.target.value)}
-                      />
-                    ))}
-                  </RadioGroup>
+                {nexquestionDetails?.type == 'Coded' && (
+                  <div className={classes.radiogroups}>
+                    <RadioGroup
+                      gridTemplateColumns
+                      aria-labelledby='demo-row-radio-buttons-group-label'
+                      defaultValue='female'
+                      name='radio-buttons-group'
+                    >
+                      {optionsAns.length &&
+                        optionsAns?.map((option) => (
+                          <FormControlLabel
+                            value={Object.values(option)[0]}
+                            control={<Radio className={classes.radiogroups} />}
+                            label={`${Object.values(option)[0]}`}
+                            onChange={(e) =>
+                              setSelectedValue((selectedValue) => [
+                                {
+                                  concept: nexquestionDetails?.name,
+                                  value: Object.values(option)[0],
+                                },
+                              ])
+                            }
+                          />
+                        ))}
+                    </RadioGroup>
+                  </div>
                 )}
-                {val.type === 'checkbox' && (
-                   <FormGroup>
-                    {val.options.map((option)=>(
-                        <FormControlLabel 
-                        // value={option}
-                        control={<Checkbox />} 
-                        label={`${option}`} 
-                        onChange={(e)=>handleCheck(e)}
-                        />
-                    ))}
-                 </FormGroup>
+                {nexquestionDetails?.type == 'Numeric' && (
+                  <TextField
+                    type='number'
+                    variant='outlined'
+                    size='small'
+                    required
+                    sx={{ width: '100%' }}
+                    onChange={(e) =>
+                      setSelectedValue((selectedValue) => [
+                        {
+                          concept: nexquestionDetails?.name,
+                          value: e.target.value,
+                        },
+                      ])
+                    }
+                  />
                 )}
-                {val.type==="text" && (
-                  <TextField fullWidth label="Enter your answer" id="fullWidth" size="small" onChange={(e)=>handleSaveAnswer(e,"text",val.id)}/>
+                {nexquestionDetails?.type == 'dataDriven' && (
+                  <div>
+                    <FormControl sx={{ width: 600 }} size='small'>
+                      <Select
+                      onChange={(e) =>
+                        setSelectedValue((selectedValue) => [
+                          {
+                            concept: nexquestionDetails?.name,
+                            value: e.target.value,
+                          },
+                        ])
+                      }
+                      >
+                        {optionsAns.length && optionsAns.map((val)=>(
+                           <MenuItem value={Object.values(val)[0]}>{Object.values(val)[0]}</MenuItem>
+                        ))}
+                      </Select>
+                    </FormControl>
+                  </div>
+                )}
+                {nexquestionDetails?.type == 'Text' && (
+                  <TextField
+                    type='text'
+                    variant='outlined'
+                    size='small'
+                    required
+                    sx={{ width: '100%' }}
+                    onChange={(e) =>
+                      setSelectedValue((selectedValue) => [
+                        {
+                          concept: nexquestionDetails?.name,
+                          value: e.target.value,
+                        },
+                      ])
+                    }
+                  />
                 )}
               </FormControl>
-            ))}
-        </div>
-      </div>
-      <div className={classes.nextbtn}>
-       <div> 
-      <Button
-          variant='contained'
-          disableElevation
-          onClick={() => prevQuestion()}
-        >
-          Previous
-        </Button>
-        </div>
-        <div>
-        <Button
-          variant='contained'
-          disableElevation
-          onClick={() => nextQuestion()}
-        >
-          Save and Next
-        </Button>
-        </div>
-      </div>
+            </div>
+          </div>
+          <div className={classes.nextbtn}>
+            <div>
+              <Button
+                variant='contained'
+                disableElevation
+                onClick={() => prevQuestion()}
+              >
+                Previous
+              </Button>
+            </div>
+            <div>
+              <Button
+                variant='contained'
+                disableElevation
+                onClick={() => nextQuestion()}
+              >
+                Save and Next
+              </Button>
+            </div>
+          </div>
+        </>
+      )}
     </>
   );
 };

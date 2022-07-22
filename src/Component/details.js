@@ -5,6 +5,7 @@ import {  useNavigate } from 'react-router';
 import MenuItem from '@mui/material/MenuItem';
 import FormControl from '@mui/material/FormControl';
 import Select from '@mui/material/Select';
+
 const useStyles = makeStyles(() => ({
   root: {
     marginTop: '18%',
@@ -18,6 +19,7 @@ const useStyles = makeStyles(() => ({
     justifyContent: 'space-between',
     alignItems: 'center',
     marginBottom: 30,
+    flexWrap: "wrap"
   },
   startscreenbtn: {
     display: 'flex',
@@ -31,15 +33,15 @@ const DetailsFill = () => {
   const [customerName, setCustomerName] = useState("")
   const [dob, setDob]= useState('')
   const [gender, setGender] = useState("")
+  
   const handleScreeningStart=()=>{
-
     navigate("/questions")
   }
   const handleSelectGender=(e)=>{
     setGender(e.target.value)
   }
-
   return (
+  
     <div className={classes.root}>
        <div className={classes.main}> 
       <div className={classes.customerdetails}>
